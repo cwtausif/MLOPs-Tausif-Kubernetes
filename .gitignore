@@ -17,3 +17,5 @@ models/candidate*
 .sixth/
 kubeflow/local_outputs/
 models/*.json
+config.bat
+node_modules
