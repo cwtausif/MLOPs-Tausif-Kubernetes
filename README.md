@@ -1,49 +1,79 @@
-# BTC-USD 7-Day Forecast — Production MLOps Pipeline
+# MLOps Assignment 3: Bitcoin Price Forecast
 
-End-to-end MLOps system that ingests daily Bitcoin prices, retrains an XGBoost
-forecaster every day, and serves 7-day close-price forecasts from an
-auto-scaling Flask microservice on Kubernetes.
+Tausif (22L-8072)
 
-```
-yfinance ─► Airflow DAG (fetch → features → train → evaluate → reload) ─► models/ (PVC)
-                                                                               │
-GitHub push ─► Actions (flake8, black, pytest, KFP compile) ─► GHCR / Docker Hub image
-                                                                               │
-                     Ingress btc-forecast.local ─► Service ─► Deployment (3 pods, HPA 2–8)
-```
+This project predicts the Bitcoin (BTC-USD) closing price for the next 7 days.
+Airflow downloads the data every day and trains an XGBoost model. A Flask API serves
+the predictions and runs on Kubernetes (Minikube). GitHub Actions tests the code and
+pushes the Docker image.
 
-| Path | Purpose |
-|---|---|
-| `app/app.py` | Flask API: `GET /health`, `POST /predict`, `GET /metrics`, `POST /reload` |
-| `app/Dockerfile` | Multi-stage, non-root, `python:3.12-slim`, Gunicorn |
-| `src/` | ETL (`etl_fetch.py`), features (`preprocess.py`), training (`train_forecast.py`), promotion gate (`evaluate.py`), reload trigger (`notify.py`) |
-| `dags/btc_etl_pipeline.py` | Daily Airflow DAG |
-| `kubeflow/btc_kfp_pipeline.py` | KFP v2 container-component pipeline → `btc_kfp_pipeline.yaml` |
-| `.github/workflows/ci_cd.yml` | Lint, test, build, push (SHA + `latest`) |
-| `k8s/` | ConfigMap/Secret, PVC, Deployment, Services, HPA, Ingress |
-| `loadtest/` | Locust file + in-cluster Locust Job for the HPA demo |
-| `docs/` | Report (`report.pdf`) and screenshots |
+The report is in `docs/report.pdf`.
 
-## Run it
+## Folders
+
+- `app/` Flask API and Dockerfile
+- `src/` code to fetch data, make features, train and evaluate the model
+- `dags/` Airflow DAG
+- `kubeflow/` Kubeflow pipeline
+- `k8s/` Kubernetes files
+- `loadtest/` Locust load test
+- `tests/` pytest tests
+- `docs/` report and screenshots
+
+## How to run
+
+Install everything (Mac):
 
 ```bash
-./setup.sh                                   # tools + .venv + minikube (macOS)
-source .venv/bin/activate && pytest -v       # 25 unit tests
-docker compose up -d --build                 # Flask :5001, Airflow :8080 (airflow/airflow)
-docker compose exec airflow-scheduler airflow dags trigger btc_etl_pipeline
-
-minikube image load ghcr.io/cwtausif/btc-forecast-api:latest   # or pull from GHCR
-kubectl apply -f k8s/configmap-secret.yaml -f k8s/pvc.yaml -f k8s/model-loader.yaml
-./k8s/load_model.sh                          # copy trained model into the PVC
-kubectl apply -f k8s/deployment.yaml -f k8s/service.yaml -f k8s/hpa.yaml -f k8s/ingress.yaml
-
-curl -X POST -H 'Host: btc-forecast.local' http://$(minikube ip)/predict \
-     -H 'Content-Type: application/json' -d '{"forecast_days": 7}'
+./setup.sh
+source .venv/bin/activate
 ```
 
-Kubeflow: `python kubeflow/btc_kfp_pipeline.py` compiles the spec; `python kubeflow/run_local.py` runs every compiled step in Docker.
+Run the tests:
 
-Load test: `kubectl create configmap locustfile --from-file=loadtest/locustfile.py && kubectl apply -f loadtest/locust-job.yaml`, then `kubectl get hpa --watch`.
+```bash
+pytest -v
+```
 
-CI pushes to `ghcr.io/cwtausif/btc-forecast-api` with the built-in token; add the
-`DOCKER_USERNAME` / `DOCKER_PASSWORD` repository secrets to also push to Docker Hub.
+Start Flask, Airflow and Postgres with Docker Compose:
+
+```bash
+docker compose up -d --build
+```
+
+Airflow is at http://localhost:8080 (user `airflow`, password `airflow`) and Flask is at http://localhost:5001.
+
+Deploy on Minikube:
+
+```bash
+kubectl apply -f k8s/configmap-secret.yaml -f k8s/pvc.yaml -f k8s/model-loader.yaml
+./k8s/load_model.sh
+kubectl apply -f k8s/deployment.yaml -f k8s/service.yaml -f k8s/hpa.yaml -f k8s/ingress.yaml
+```
+
+Get a forecast:
+
+```bash
+curl -X POST http://btc-forecast.local/predict -H "Content-Type: application/json" -d '{"forecast_days": 7}'
+```
+
+Load test:
+
+```bash
+kubectl create configmap locustfile --from-file=loadtest/locustfile.py
+kubectl apply -f loadtest/locust-job.yaml
+kubectl get hpa --watch
+```
+
+Kubeflow:
+
+```bash
+python kubeflow/btc_kfp_pipeline.py
+python kubeflow/run_local.py
+```
+
+## Docker image
+
+`ghcr.io/cwtausif/btc-forecast-api:latest`
+
+To also push to Docker Hub, add `DOCKER_USERNAME` and `DOCKER_PASSWORD` in the repo secrets.
