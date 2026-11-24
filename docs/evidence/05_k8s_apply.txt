@@ -1,0 +1,33 @@
+$ kubectl apply -f k8s/configmap-secret.yaml -f k8s/pvc.yaml -f k8s/model-loader.yaml
+configmap/btc-api-config created
+secret/btc-api-secret created
+persistentvolumeclaim/btc-models-pvc created
+pod/model-loader created
+
+$ kubectl apply -f k8s/deployment.yaml -f k8s/service.yaml -f k8s/hpa.yaml -f k8s/ingress.yaml
+deployment.apps/btc-api created
+service/btc-api-service created
+service/btc-api-nodeport created
+horizontalpodautoscaler.autoscaling/btc-api-hpa created
+ingress.networking.k8s.io/btc-api-ingress created
+
+$ kubectl rollout status deployment/btc-api
+Waiting for deployment "btc-api" rollout to finish: 0 of 3 updated replicas are available...
+Waiting for deployment "btc-api" rollout to finish: 1 of 3 updated replicas are available...
+deployment "btc-api" successfully rolled out
+
+$ ./k8s/load_model.sh   (copy trained model from Airflow run into the PVC)
+⏳ Waiting for the model-loader pod...
+pod/model-loader condition met
+✅ copied model.pkl
+✅ copied metrics.json
+✅ copied predictions.json
+
+total 3460
+-rw-r--r--    1 501      staff          655 Nov 24 11:42 metrics.json
+-rw-r--r--    1 501      staff      3532895 Nov 24 11:42 model.pkl
+-rw-r--r--    1 501      staff          626 Nov 24 11:43 predictions.json
+
+Model version now in the PVC:
+"version": "v20261124-112726"
+Flask pods pick it up automatically on their next request.

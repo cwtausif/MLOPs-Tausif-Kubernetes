@@ -1,0 +1,16 @@
+# Libraries for your Mac (.venv) only.
+# Each container (Flask, Airflow) has its own requirements.txt.
+
+# Flask app's libraries → needed so pytest can test the API on your Mac
+-r app/requirements.txt
+
+# --- Testing & code quality ---
+pytest          # unit tests
+flake8          # finds messy code
+black           # auto-formats code
+
+# --- Load testing ---
+locust          # fake traffic + graphs for HPA test
+
+# --- Kubeflow ---
+kfp>=2.0        # builds the Kubeflow pipeline YAML

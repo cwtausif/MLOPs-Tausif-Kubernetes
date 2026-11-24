@@ -1,0 +1,15 @@
+.git
+.github
+.venv
+**/__pycache__
+**/*.pyc
+logs
+data
+models
+docs
+tests
+loadtest
+kubeflow/*.yaml
+.DS_Store
+.vincent
+.sixth

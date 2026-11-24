@@ -1,0 +1,221 @@
+# PIPELINE DEFINITION
+# Name: btc-7day-forecast
+# Description: Daily BTC-USD ingest → features → XGBoost 7-day forecast → gate
+# Inputs:
+#    mape_threshold: float [Default: 10.0]
+#    start_date: str [Default: '2017-01-01']
+#    ticker: str [Default: 'BTC-USD']
+components:
+  comp-evaluate-and-register:
+    executorLabel: exec-evaluate-and-register
+    inputDefinitions:
+      artifacts:
+        metrics:
+          artifactType:
+            schemaTitle: system.Artifact
+            schemaVersion: 0.0.1
+        model:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+      parameters:
+        mape_threshold:
+          parameterType: NUMBER_DOUBLE
+    outputDefinitions:
+      artifacts:
+        registered_model:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+  comp-generate-features:
+    executorLabel: exec-generate-features
+    inputDefinitions:
+      artifacts:
+        raw_data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      artifacts:
+        clean_data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+  comp-ingest-data:
+    executorLabel: exec-ingest-data
+    inputDefinitions:
+      parameters:
+        start_date:
+          parameterType: STRING
+        ticker:
+          parameterType: STRING
+    outputDefinitions:
+      artifacts:
+        raw_data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+  comp-train-model:
+    executorLabel: exec-train-model
+    inputDefinitions:
+      artifacts:
+        clean_data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      artifacts:
+        metrics:
+          artifactType:
+            schemaTitle: system.Artifact
+            schemaVersion: 0.0.1
+        model:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+deploymentSpec:
+  executors:
+    exec-evaluate-and-register:
+      container:
+        args:
+        - 'set -e; export MODEL_DIR=/tmp/models MAPE_THRESHOLD="$2"; mkdir -p $MODEL_DIR;
+          cp "$0" $MODEL_DIR/candidate.pkl; cp "$1" $MODEL_DIR/candidate_metrics.json;
+          echo ''{}'' > $MODEL_DIR/candidate_predictions.json; python -m src.evaluate;
+          test -f $MODEL_DIR/model.pkl || { echo ''model rejected: MAPE above threshold'';
+          exit 1; }; mkdir -p "$(dirname "$3")"; cp $MODEL_DIR/model.pkl "$3"'
+        - '{{$.inputs.artifacts[''model''].path}}'
+        - '{{$.inputs.artifacts[''metrics''].path}}'
+        - '{{$.inputs.parameters[''mape_threshold'']}}'
+        - '{{$.outputs.artifacts[''registered_model''].path}}'
+        command:
+        - sh
+        - -c
+        image: ghcr.io/cwtausif/btc-pipeline:latest
+    exec-generate-features:
+      container:
+        args:
+        - set -e; export DATA_DIR=/tmp/data MODEL_DIR=/tmp/models; mkdir -p $DATA_DIR;
+          cp "$0" $DATA_DIR/raw.json; python -m src.preprocess; mkdir -p "$(dirname
+          "$1")"; cp $DATA_DIR/clean.json "$1"
+        - '{{$.inputs.artifacts[''raw_data''].path}}'
+        - '{{$.outputs.artifacts[''clean_data''].path}}'
+        command:
+        - sh
+        - -c
+        image: ghcr.io/cwtausif/btc-pipeline:latest
+    exec-ingest-data:
+      container:
+        args:
+        - set -e; export TICKER="$0" START_DATE="$1" DATA_DIR=/tmp/data MODEL_DIR=/tmp/models;
+          python -m src.etl_fetch; mkdir -p "$(dirname "$2")"; cp /tmp/data/raw.json
+          "$2"
+        - '{{$.inputs.parameters[''ticker'']}}'
+        - '{{$.inputs.parameters[''start_date'']}}'
+        - '{{$.outputs.artifacts[''raw_data''].path}}'
+        command:
+        - sh
+        - -c
+        image: ghcr.io/cwtausif/btc-pipeline:latest
+    exec-train-model:
+      container:
+        args:
+        - set -e; export DATA_DIR=/tmp/data MODEL_DIR=/tmp/models; mkdir -p $DATA_DIR
+          $MODEL_DIR; cp "$0" $DATA_DIR/clean.json; python -m src.train_forecast;
+          mkdir -p "$(dirname "$1")" "$(dirname "$2")"; cp $MODEL_DIR/candidate.pkl
+          "$1"; cp $MODEL_DIR/candidate_metrics.json "$2"
+        - '{{$.inputs.artifacts[''clean_data''].path}}'
+        - '{{$.outputs.artifacts[''model''].path}}'
+        - '{{$.outputs.artifacts[''metrics''].path}}'
+        command:
+        - sh
+        - -c
+        image: ghcr.io/cwtausif/btc-pipeline:latest
+        resources:
+          cpuLimit: 2.0
+          memoryLimit: 2.0
+          resourceCpuLimit: '2'
+          resourceMemoryLimit: 2G
+pipelineInfo:
+  description: "Daily BTC-USD ingest \u2192 features \u2192 XGBoost 7-day forecast\
+    \ \u2192 gate"
+  name: btc-7day-forecast
+root:
+  dag:
+    tasks:
+      evaluate-and-register:
+        cachingOptions: {}
+        componentRef:
+          name: comp-evaluate-and-register
+        dependentTasks:
+        - train-model
+        inputs:
+          artifacts:
+            metrics:
+              taskOutputArtifact:
+                outputArtifactKey: metrics
+                producerTask: train-model
+            model:
+              taskOutputArtifact:
+                outputArtifactKey: model
+                producerTask: train-model
+          parameters:
+            mape_threshold:
+              componentInputParameter: mape_threshold
+        taskInfo:
+          name: evaluate-and-register
+      generate-features:
+        cachingOptions: {}
+        componentRef:
+          name: comp-generate-features
+        dependentTasks:
+        - ingest-data
+        inputs:
+          artifacts:
+            raw_data:
+              taskOutputArtifact:
+                outputArtifactKey: raw_data
+                producerTask: ingest-data
+        taskInfo:
+          name: generate-features
+      ingest-data:
+        cachingOptions: {}
+        componentRef:
+          name: comp-ingest-data
+        inputs:
+          parameters:
+            start_date:
+              componentInputParameter: start_date
+            ticker:
+              componentInputParameter: ticker
+        taskInfo:
+          name: ingest-data
+      train-model:
+        cachingOptions: {}
+        componentRef:
+          name: comp-train-model
+        dependentTasks:
+        - generate-features
+        inputs:
+          artifacts:
+            clean_data:
+              taskOutputArtifact:
+                outputArtifactKey: clean_data
+                producerTask: generate-features
+        taskInfo:
+          name: train-model
+  inputDefinitions:
+    parameters:
+      mape_threshold:
+        defaultValue: 10.0
+        isOptional: true
+        parameterType: NUMBER_DOUBLE
+      start_date:
+        defaultValue: '2017-01-01'
+        isOptional: true
+        parameterType: STRING
+      ticker:
+        defaultValue: BTC-USD
+        isOptional: true
+        parameterType: STRING
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.18.2

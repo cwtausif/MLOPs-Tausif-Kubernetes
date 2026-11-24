@@ -1,0 +1,9 @@
+# Libraries the Airflow container needs to run the pipeline tasks.
+# (Airflow itself is already inside the apache/airflow image.)
+
+yfinance        # fetch BTC-USD prices
+pandas          # data cleaning + features
+numpy           # math
+xgboost==3.4.1  # forecasting model (same version as the Flask app)
+scikit-learn    # MAE / RMSE / MAPE
+requests        # call Flask /reload after retraining

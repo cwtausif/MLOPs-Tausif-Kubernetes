@@ -1,0 +1,87 @@
+# D3 — Run the Flask API: 3 copies, health checks, CPU/memory limits.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: btc-api
+  labels:
+    app: btc-api
+spec:
+  replicas: 3                          # high availability: 3 pods
+  selector:
+    matchLabels:
+      app: btc-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: btc-api                   # the Service + HPA find pods by this label
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001                # the "app" user from the Dockerfile
+        runAsGroup: 1001
+        fsGroup: 1001
+      containers:
+        - name: btc-api
+          # Image pushed by GitHub Actions (also on Docker Hub when secrets are set)
+          image: ghcr.io/cwtausif/btc-forecast-api:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 5000
+
+          # D1 — settings from the ConfigMap + Secret as environment variables
+          envFrom:
+            - configMapRef:
+                name: btc-api-config
+            - secretRef:
+                name: btc-api-secret
+
+          # D3 — resource requests & limits
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          # D3 — liveness: restart the container if /health stops answering
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # D3 — readiness: only send traffic once /health answers
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # D2 — the shared model disk
+          volumeMounts:
+            - name: models
+              mountPath: /app/models
+              readOnly: true
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: btc-models-pvc

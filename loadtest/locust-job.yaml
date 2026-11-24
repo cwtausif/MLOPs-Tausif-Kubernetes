@@ -1,0 +1,44 @@
+# In-cluster Locust load test for the HPA demo (Part D5).
+# Runs inside Kubernetes so traffic goes through the Service and is spread
+# across ALL pods (kubectl port-forward would pin it to a single pod).
+#
+#   kubectl create configmap locustfile --from-file=loadtest/locustfile.py
+#   kubectl apply -f loadtest/locust-job.yaml
+#   kubectl get hpa --watch            # in another terminal
+#   kubectl logs -f job/btc-locust     # Locust stats
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: btc-locust
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: locust
+          image: locustio/locust:2.43.1
+          args:
+            - -f
+            - /mnt/locust/locustfile.py
+            - --host=http://btc-api-service
+            - --headless
+            - --users=150
+            - --spawn-rate=15
+            - --run-time=4m
+            - --only-summary
+            - --csv=/tmp/btc
+          volumeMounts:
+            - name: locustfile
+              mountPath: /mnt/locust
+          resources:
+            requests:
+              cpu: 500m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+      volumes:
+        - name: locustfile
+          configMap:
+            name: locustfile

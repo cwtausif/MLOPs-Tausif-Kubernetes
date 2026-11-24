@@ -1,0 +1,46 @@
+$ kubectl get pods -l app=btc-api   (17:09:53)
+NAME                       READY   STATUS    RESTARTS        AGE
+btc-api-84989bdb94-5h2kq   1/1     Running   3 (3m38s ago)   10m
+btc-api-84989bdb94-p2zvd   1/1     Running   2 (4m19s ago)   19m
+
+$ kubectl delete pod btc-api-84989bdb94-5h2kq --wait=false   (17:09:53)
+pod "btc-api-84989bdb94-5h2kq" deleted from default namespace
+
+--- t+0s  17:09:54  kubectl get pods -l app=btc-api
+btc-api-84989bdb94-5h2kq   1/1   Terminating   3 (3m39s ago)   10m
+btc-api-84989bdb94-ljqlw   0/1   Pending       0               0s
+btc-api-84989bdb94-p2zvd   1/1   Running       2 (4m20s ago)   19m
+
+--- t+4s  17:09:58  kubectl get pods -l app=btc-api
+btc-api-84989bdb94-5h2kq   1/1   Terminating   3 (3m43s ago)   10m
+btc-api-84989bdb94-ljqlw   0/1   Running       0               4s
+btc-api-84989bdb94-p2zvd   1/1   Running       2 (4m24s ago)   19m
+
+--- t+8s  17:10:02  kubectl get pods -l app=btc-api
+btc-api-84989bdb94-ljqlw   0/1   Running   0               8s
+btc-api-84989bdb94-p2zvd   1/1   Running   2 (4m28s ago)   19m
+
+--- t+12s  17:10:06  kubectl get pods -l app=btc-api
+btc-api-84989bdb94-ljqlw   0/1   Running   0               12s
+btc-api-84989bdb94-p2zvd   1/1   Running   2 (4m32s ago)   19m
+
+--- t+16s  17:10:10  kubectl get pods -l app=btc-api
+btc-api-84989bdb94-ljqlw   1/1   Running   0               16s
+btc-api-84989bdb94-p2zvd   1/1   Running   2 (4m36s ago)   19m
+
+$ kubectl get deploy btc-api
+NAME      READY   UP-TO-DATE   AVAILABLE   AGE
+btc-api   2/2     2            2           29m
+
+$ kubectl get events --field-selector involvedObject.kind=Pod --sort-by=.lastTimestamp | tail
+52s         Normal    Killing                        pod/btc-api-84989bdb94-2p44m           Stopping container btc-api
+52s         Normal    Killing                        pod/btc-api-84989bdb94-ljp58           Stopping container btc-api
+17s         Normal    Killing                        pod/btc-api-84989bdb94-5h2kq           Stopping container btc-api
+17s         Normal    Started                        pod/btc-api-84989bdb94-ljqlw           Container started
+17s         Normal    Scheduled                      pod/btc-api-84989bdb94-ljqlw           Successfully assigned default/btc-api-84989bdb94-ljqlw to 
+17s         Normal    Pulled                         pod/btc-api-84989bdb94-ljqlw           Container image "ghcr.io/cwtausif/btc-forecast-api:latest"
+17s         Normal    Created                        pod/btc-api-84989bdb94-ljqlw           Container created
+17s         Normal    SuccessfulCreate               replicaset/btc-api-84989bdb94          (combined from similar events): Created pod: btc-api-84989
+
+$ curl /health during recovery (served by surviving pod via Ingress)
+{"model_loaded":true,"model_stage":"production","model_trained_on":"2026-11-24","model_version":"v20261124-112726","status":"ok","uptime_seconds":211.8}

@@ -1,0 +1,45 @@
+$ flake8 app src dags tests kubeflow loadtest
+(no issues)
+
+$ black --check app src dags tests kubeflow loadtest
+All done! ✨ 🍰 ✨
+15 files would be left unchanged.
+
+$ pytest -v
+============================= test session starts ==============================
+platform darwin -- Python 3.11.12, pytest-9.2.0, pluggy-1.7.0 -- /Users/mapmac/Desktop/D/FAST/SEM-4-Autumn-2026/MLOPs/Assignments/Assignment-3/MLOPS-Assignment-3/MLOPs-Tausif-Kubernetes/.venv/bin/python3.11
+cachedir: .pytest_cache
+rootdir: /Users/mapmac/Desktop/D/FAST/SEM-4-Autumn-2026/MLOPs/Assignments/Assignment-3/MLOPS-Assignment-3/MLOPs-Tausif-Kubernetes
+configfile: setup.cfg
+testpaths: tests
+plugins: platformdirs-4.14.8, locust-2.47.0
+collecting ... collected 25 items
+tests/test_app.py::test_health_ok PASSED                                 [  4%]
+tests/test_app.py::test_health_without_model_still_alive PASSED          [  8%]
+tests/test_app.py::test_predict_default_7_days PASSED                    [ 12%]
+tests/test_app.py::test_predict_custom_days PASSED                       [ 16%]
+tests/test_app.py::test_predict_with_custom_history PASSED               [ 20%]
+tests/test_app.py::test_predict_rejects_bad_forecast_days PASSED         [ 24%]
+tests/test_app.py::test_predict_rejects_invalid_json PASSED              [ 28%]
+tests/test_app.py::test_predict_rejects_non_json_body PASSED             [ 32%]
+tests/test_app.py::test_predict_rejects_json_list PASSED                 [ 36%]
+tests/test_app.py::test_predict_rejects_short_history PASSED             [ 40%]
+tests/test_app.py::test_predict_rejects_history_missing_field PASSED     [ 44%]
+tests/test_app.py::test_predict_rejects_negative_price PASSED            [ 48%]
+tests/test_app.py::test_predict_without_model_returns_503 PASSED         [ 52%]
+tests/test_app.py::test_metrics PASSED                                   [ 56%]
+tests/test_app.py::test_metrics_missing_returns_503 PASSED               [ 60%]
+tests/test_app.py::test_reload_picks_up_new_model PASSED                 [ 64%]
+tests/test_app.py::test_auto_reload_when_file_changes PASSED             [ 68%]
+tests/test_app.py::test_reload_without_model_returns_503 PASSED          [ 72%]
+tests/test_app.py::test_unknown_route_returns_json_404 PASSED            [ 76%]
+tests/test_app.py::test_wrong_method_returns_405 PASSED                  [ 80%]
+tests/test_app.py::test_internal_error_returns_500 PASSED                [ 84%]
+tests/test_pipeline.py::test_clean_fills_missing_days_and_drops_bad_rows PASSED [ 88%]
+tests/test_pipeline.py::test_add_features_has_all_columns_and_no_nans PASSED [ 92%]
+tests/test_pipeline.py::test_full_pipeline_trains_and_promotes PASSED    [ 96%]
+tests/test_pipeline.py::test_evaluate_rejects_model_above_threshold PASSED [100%]
+============================== 25 passed in 8.54s ==============================
+
+$ python kubeflow/btc_kfp_pipeline.py
+Compiled pipeline → /Users/mapmac/Desktop/D/FAST/SEM-4-Autumn-2026/MLOPs/Assignments/Assignment-3/MLOPS-Assignment-3/MLOPs-Tausif-Kubernetes/kubeflow/btc_kfp_pipeline.yaml

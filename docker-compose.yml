@@ -1,0 +1,139 @@
+# =============================================================================
+# docker-compose.yml — local Airflow environment for the BTC MLOps project
+#
+# Services:
+#   flask-api              → Flask prediction API     (http://localhost:5001)
+#   postgres               → database where Airflow stores its state
+#   airflow-init           → one-time setup: creates DB tables + admin user, then exits
+#   airflow-apiserver      → Airflow web UI + API  (http://localhost:8080)
+#   airflow-scheduler      → decides when tasks run and runs them (LocalExecutor)
+#   airflow-dag-processor  → reads the DAG files in ./dags
+#
+# Start:   docker compose up -d --build
+# Stop:    docker compose down
+# Login:   airflow / airflow
+#
+# Note: on a Mac, port 5000 is used by AirPlay → Flask is published on 5001.
+# =============================================================================
+
+x-airflow-common: &airflow-common
+  build: ./airflow                  # custom image = Airflow + ML libraries
+  image: btc-airflow:latest
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CORE__FERNET_KEY: ""
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: http://airflow-apiserver:8080/execution/
+    AIRFLOW__API_AUTH__JWT_SECRET: btc-mlops-local-jwt-secret   # same secret for all components
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+    # --- project settings used by our pipeline code ---
+    PYTHONPATH: /opt/airflow          # lets DAGs do: from src.etl_fetch import ...
+    DATA_DIR: /opt/airflow/data
+    MODEL_DIR: /opt/airflow/models
+    MAPE_THRESHOLD: "10"              # promote new model only if MAPE ≤ 10%
+    FLASK_RELOAD_URL: http://flask-api:5000/reload   # Flask container (same network)
+  volumes:
+    - ./dags:/opt/airflow/dags        # Airflow pipelines
+    - ./src:/opt/airflow/src          # our ETL + training code
+    - ./data:/opt/airflow/data        # downloaded BTC data
+    - ./models:/opt/airflow/models    # trained model.pkl + metrics.json
+    - ./logs:/opt/airflow/logs        # task logs
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on: &airflow-common-depends-on
+    postgres:
+      condition: service_healthy
+
+services:
+  flask-api:
+    build:
+      context: .                      # project root (Dockerfile copies app/ and src/)
+      dockerfile: app/Dockerfile
+    image: btc-forecast-api:latest
+    ports:
+      - "5001:5000"                   # Mac:5001 → container:5000
+    environment:
+      MODEL_DIR: /app/models
+      MODEL_STAGE: local
+      LOG_LEVEL: INFO
+    volumes:
+      - ./models:/app/models:ro       # same models/ folder Airflow writes to
+    restart: always
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/data /opt/airflow/models
+        chown -R "${AIRFLOW_UID:-50000}:0" /opt/airflow/logs /opt/airflow/data /opt/airflow/models
+        exec /entrypoint airflow version
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: airflow
+      _AIRFLOW_WWW_USER_PASSWORD: airflow
+    user: "0:0"
+
+  airflow-apiserver:
+    <<: *airflow-common
+    command: api-server
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-dag-processor:
+    <<: *airflow-common
+    command: dag-processor
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+volumes:
+  postgres-db:

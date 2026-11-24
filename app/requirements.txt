@@ -1,0 +1,12 @@
+# Libraries the Flask container needs (kept small on purpose).
+flask           # REST API
+gunicorn        # production WSGI server
+pandas          # build features from custom history
+numpy           # math
+scikit-learn    # needed to un-pickle the XGBoost sklearn model
+# XGBoost: CPU-only build on Linux (Docker/K8s/GitHub Actions) → much smaller image.
+# Pinned to the SAME version Airflow trains with, so model.pkl always loads.
+# (3.4.1 needs Python 3.12 → the Docker images use Python 3.12.)
+xgboost-cpu==3.4.1; sys_platform == "linux"
+# Your Mac (Python 3.10, only for running tests) gets the newest xgboost it supports.
+xgboost; sys_platform != "linux"

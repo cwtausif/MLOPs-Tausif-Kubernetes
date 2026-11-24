@@ -1,0 +1,23 @@
+# D6 — Open the API at http://btc-forecast.local
+# Needs: the ingress addon (setup.sh enabled it),
+#        "127.0.0.1 btc-forecast.local" in /etc/hosts,
+#        and "minikube tunnel" running in another terminal.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: btc-api-ingress
+  labels:
+    app: btc-api
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: btc-forecast.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: btc-api-service
+                port:
+                  number: 80
