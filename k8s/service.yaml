@@ -1,7 +1,7 @@
-# D4 — One fixed address for all Flask pods (port 80 → container port 5000).
+# D4 - One fixed address for all Flask pods (port 80 -> container port 5000).
 #
-#   btc-api-service   ClusterIP → inside the cluster only (used by the Ingress)
-#   btc-api-nodeport  NodePort  → reachable from your Mac:
+#   btc-api-service   ClusterIP -> inside the cluster only (used by the Ingress)
+#   btc-api-nodeport  NodePort  -> reachable from your Mac:
 #                                 minikube service btc-api-nodeport --url
 apiVersion: v1
 kind: Service

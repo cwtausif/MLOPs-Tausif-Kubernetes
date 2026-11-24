@@ -1,6 +1,6 @@
-# D5 — Horizontal Pod Autoscaler: add pods when CPU is busy.
-#   CPU above 60% (of the 100m request) → more pods, up to 8
-#   Quiet again → back down, to at least 2
+# D5 - Horizontal Pod Autoscaler: add pods when CPU is busy.
+#   CPU above 60% (of the 100m request) -> more pods, up to 8
+#   Quiet again -> back down, to at least 2
 # Needs the metrics-server addon (setup.sh enabled it).
 # Watch it:  kubectl get hpa --watch
 apiVersion: autoscaling/v2

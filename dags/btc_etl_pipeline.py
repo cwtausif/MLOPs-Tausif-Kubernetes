@@ -1,9 +1,9 @@
 """
-btc_etl_pipeline.py — Airflow DAG: runs the BTC pipeline every day.
+btc_etl_pipeline.py - Airflow DAG: runs the BTC pipeline every day.
 
-    fetch_data → preprocess → train_model → evaluate_model → reload_api
+    fetch_data -> preprocess -> train_model -> evaluate_model -> reload_api
 
-Each task just calls a function from src/ — the real work lives there.
+Each task just calls a function from src/ - the real work lives there.
 """
 
 from datetime import datetime, timedelta
@@ -19,7 +19,7 @@ default_args = {
 
 @dag(
     dag_id="btc_etl_pipeline",
-    description="Daily BTC-USD fetch → features → retrain → evaluate → reload Flask",
+    description="Daily BTC-USD fetch -> features -> retrain -> evaluate -> reload Flask",
     schedule="@daily",
     start_date=datetime(2026, 11, 1),
     catchup=False,  # don't run for past missed days
@@ -58,7 +58,7 @@ def btc_etl_pipeline():
 
         return run(promoted=decision["promoted"])
 
-    # the order: each task gets the previous task's output → Airflow draws the arrows
+    # the order: each task gets the previous task's output -> Airflow draws the arrows
     raw = fetch_data()
     clean = preprocess(raw)
     trained = train_model(clean)

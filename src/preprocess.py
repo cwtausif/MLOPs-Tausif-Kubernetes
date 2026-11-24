@@ -1,5 +1,5 @@
 """
-preprocess.py — Step 2: clean raw JSON and add features.
+preprocess.py - Step 2: clean raw JSON and add features.
 
 Input:  data/raw.json
 Output: data/clean.json
@@ -10,10 +10,10 @@ Cleaning:
   - fill small gaps (missing days) by carrying the previous value forward
 
 Features (Part C1):
-  - ma_7, ma_30        → 7-day and 30-day moving averages of close
-  - volatility_7/_30   → std of daily returns over 7 / 30 days
-  - return_1           → today's % change
-  - lag_1 ... lag_7    → close price 1..7 days ago (as ratio to today's close)
+  - ma_7, ma_30        -> 7-day and 30-day moving averages of close
+  - volatility_7/_30   -> std of daily returns over 7 / 30 days
+  - return_1           -> today's % change
+  - lag_1 ... lag_7    -> close price 1..7 days ago (as ratio to today's close)
 """
 
 import json
@@ -73,7 +73,7 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     df["volatility_7"] = df["return_1"].rolling(7).std()
     df["volatility_30"] = df["return_1"].rolling(30).std()
     for lag in range(1, 8):
-        df[f"lag_{lag}"] = close.shift(lag) / close  # ratio → scale-free
+        df[f"lag_{lag}"] = close.shift(lag) / close  # ratio -> scale-free
     df["hl_range"] = (df["high"] - df["low"]) / close
     df["volume_change"] = df["volume"].pct_change().replace([np.inf, -np.inf], 0)
 

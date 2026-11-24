@@ -1,5 +1,5 @@
 """
-etl_fetch.py — Step 1: download daily BTC-USD prices and save them as raw JSON.
+etl_fetch.py - Step 1: download daily BTC-USD prices and save them as raw JSON.
 
 Output: data/raw.json
   [{"date": "2026-11-16", "open": ..., "high": ..., "low": ..., "close": ..., "volume": ...}, ...]
@@ -44,7 +44,7 @@ def fetch_data() -> str:
 
     print(
         f"[fetch] Saved {len(records)} rows "
-        f"({records[0]['date']} → {records[-1]['date']}) to {config.RAW_JSON}"
+        f"({records[0]['date']} -> {records[-1]['date']}) to {config.RAW_JSON}"
     )
     return str(config.RAW_JSON)
 

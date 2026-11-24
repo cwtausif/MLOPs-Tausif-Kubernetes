@@ -1,12 +1,12 @@
 """
-evaluate.py — Step 4: decide whether the new (candidate) model goes live.
+evaluate.py - Step 4: decide whether the new (candidate) model goes live.
 
 Rule: promote the candidate only if its MAPE on the last 7 days
       is below MAPE_THRESHOLD (default 10%).
 
-If promoted:   candidate.pkl → model.pkl
-               candidate_metrics.json → metrics.json
-               candidate_predictions.json → predictions.json
+If promoted:   candidate.pkl -> model.pkl
+               candidate_metrics.json -> metrics.json
+               candidate_predictions.json -> predictions.json
 If rejected:   the old live model stays. Nothing changes for Flask.
 """
 
@@ -18,7 +18,7 @@ from src import config
 
 
 def _replace(src, dst):
-    """Copy to a temp file, then swap — so Flask never reads a half-written file."""
+    """Copy to a temp file, then swap - so Flask never reads a half-written file."""
     tmp = dst.with_name(f".{dst.name}.{os.getpid()}.tmp")  # unique per process
     with open(src, "rb") as fin, open(tmp, "wb") as fout:
         shutil.copyfileobj(fin, fout)
@@ -49,12 +49,12 @@ def evaluate_model() -> dict:
         config.LIVE_METRICS.write_text(json.dumps(metrics, indent=2))
         decision["promoted"] = True
         print(
-            f"[evaluate] ✅ PROMOTED {metrics['version']} "
-            f"(MAPE {mape:.2f}% ≤ {config.MAPE_THRESHOLD}%)"
+            f"[evaluate] PROMOTED {metrics['version']} "
+            f"(MAPE {mape:.2f}% <= {config.MAPE_THRESHOLD}%)"
         )
     else:
         print(
-            f"[evaluate] ❌ REJECTED {metrics['version']} "
+            f"[evaluate] REJECTED {metrics['version']} "
             f"(MAPE {mape:.2f}% > {config.MAPE_THRESHOLD}%). "
             + (
                 "No live model exists yet!"

@@ -1,10 +1,10 @@
 # =============================================================================
-# app/Dockerfile — production image for the Flask prediction API (Part B1)
+# app/Dockerfile - production image for the Flask prediction API (Part B1)
 #
 # Multi-stage build:
-#   stage 1 "builder" → installs Python libraries (has pip caches, build tools)
-#   stage 2 "runtime" → copies ONLY the installed libraries + our code
-#                       → smaller, cleaner final image
+#   stage 1 "builder" -> installs Python libraries (has pip caches, build tools)
+#   stage 2 "runtime" -> copies ONLY the installed libraries + our code
+#                       -> smaller, cleaner final image
 #
 # Build from the project root (so src/ can be copied too):
 #   docker build -f app/Dockerfile -t btc-forecast-api .
@@ -14,7 +14,7 @@
 FROM python:3.12-slim AS builder
 
 WORKDIR /build
-# Copy requirements first → this layer is cached until requirements change
+# Copy requirements first -> this layer is cached until requirements change
 COPY app/requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 

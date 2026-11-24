@@ -1,9 +1,9 @@
 # CI/CD for the BTC forecasting API (Parts B3 + B4)
 #
-#   lint-test  → flake8 + black --check + pytest + compile the Kubeflow pipeline
-#   build-push → build app/Dockerfile, tag with the commit SHA and "latest", push to
-#                  • GitHub Container Registry (ghcr.io) — uses the built-in GITHUB_TOKEN
-#                  • Docker Hub — when the DOCKER_USERNAME / DOCKER_PASSWORD secrets exist
+#   lint-test  -> flake8 + black --check + pytest + compile the Kubeflow pipeline
+#   build-push -> build app/Dockerfile, tag with the commit SHA and "latest", push to
+#                  - GitHub Container Registry (ghcr.io) - uses the built-in GITHUB_TOKEN
+#                  - Docker Hub - when the DOCKER_USERNAME / DOCKER_PASSWORD secrets exist
 #
 # Runs on every push to main and every pull request (pull requests never push images).
 name: CI/CD

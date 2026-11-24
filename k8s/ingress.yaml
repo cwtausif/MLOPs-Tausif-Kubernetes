@@ -1,4 +1,4 @@
-# D6 — Open the API at http://btc-forecast.local
+# D6 - Open the API at http://btc-forecast.local
 # Needs: the ingress addon (setup.sh enabled it),
 #        "127.0.0.1 btc-forecast.local" in /etc/hosts,
 #        and "minikube tunnel" running in another terminal.

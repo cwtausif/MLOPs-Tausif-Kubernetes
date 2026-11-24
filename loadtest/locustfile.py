@@ -20,7 +20,7 @@ class ForecastUser(HttpUser):
 
     @task(5)
     def predict(self):
-        # the heaviest endpoint → drives CPU up
+        # the heaviest endpoint -> drives CPU up
         self.client.post("/predict", json={"forecast_days": 7})
 
     @task(2)

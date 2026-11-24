@@ -16,3 +16,4 @@ models/candidate*
 .vincent/
 .sixth/
 kubeflow/local_outputs/
+models/*.json

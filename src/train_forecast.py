@@ -1,8 +1,8 @@
 """
-train_forecast.py — Step 3: train the 7-day BTC forecasting model.
+train_forecast.py - Step 3: train the 7-day BTC forecasting model.
 
 Input:  data/clean.json
-Output: models/candidate.pkl              (new model — NOT live yet)
+Output: models/candidate.pkl              (new model - NOT live yet)
         models/candidate_metrics.json     (MAE, RMSE, MAPE on the last 7 days)
         models/candidate_predictions.json (forecast for the next 7 days)
 
@@ -14,7 +14,7 @@ How the model works ("direct" multi-step forecasting):
 
 How it is tested (honest evaluation):
   - Hide the last 7 days, train on everything before, predict those 7 days,
-    compare with the real prices → MAE, RMSE, MAPE.
+    compare with the real prices -> MAE, RMSE, MAPE.
   - Then retrain on ALL data and forecast the real next 7 days.
 """
 
@@ -51,7 +51,7 @@ def load_clean() -> pd.DataFrame:
 def fit_models(df: pd.DataFrame, last_index: int) -> dict:
     """
     Train one model per horizon using only data up to row `last_index`
-    (targets must not go past last_index — no peeking into the future).
+    (targets must not go past last_index - no peeking into the future).
     """
     log_close = np.log(df["close"].to_numpy())
     models = {}
@@ -109,13 +109,13 @@ def train_model() -> dict:
     df = load_clean()
     print(
         f"[train] Loaded {len(df)} rows "
-        f"({df['date'].iloc[0]:%Y-%m-%d} → {df['date'].iloc[-1]:%Y-%m-%d})"
+        f"({df['date'].iloc[0]:%Y-%m-%d} -> {df['date'].iloc[-1]:%Y-%m-%d})"
     )
 
     # 1) honest test on the last 7 days
     metrics = evaluate_on_last_week(df)
     print(
-        f"[train] Test {metrics['test_start']} → {metrics['test_end']}: "
+        f"[train] Test {metrics['test_start']} -> {metrics['test_end']}: "
         f"MAE={metrics['mae']:.2f}  RMSE={metrics['rmse']:.2f}  "
         f"MAPE={metrics['mape']:.2f}%  (baseline MAPE={metrics['baseline_mape']:.2f}%)"
     )

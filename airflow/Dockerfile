@@ -1,5 +1,5 @@
 # Custom Airflow image = official Airflow + our ML libraries
-# Python 3.12 explicitly — matches the Flask image (same xgboost version)
+# Python 3.12 explicitly - matches the Flask image (same xgboost version)
 FROM apache/airflow:3.3.1-python3.12
 
 # XGBoost needs the OpenMP runtime (libgomp1)

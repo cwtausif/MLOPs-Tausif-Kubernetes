@@ -1,6 +1,6 @@
 # PIPELINE DEFINITION
 # Name: btc-7day-forecast
-# Description: Daily BTC-USD ingest → features → XGBoost 7-day forecast → gate
+# Description: Daily BTC-USD ingest -> features -> XGBoost 7-day forecast -> gate
 # Inputs:
 #    mape_threshold: float [Default: 10.0]
 #    start_date: str [Default: '2017-01-01']
@@ -136,8 +136,7 @@ deploymentSpec:
           resourceCpuLimit: '2'
           resourceMemoryLimit: 2G
 pipelineInfo:
-  description: "Daily BTC-USD ingest \u2192 features \u2192 XGBoost 7-day forecast\
-    \ \u2192 gate"
+  description: Daily BTC-USD ingest -> features -> XGBoost 7-day forecast -> gate
   name: btc-7day-forecast
 root:
   dag:

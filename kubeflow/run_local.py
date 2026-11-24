@@ -81,7 +81,7 @@ def run_task(name):
         *ex["command"],
         *args,
     ]
-    print(f"\n▶ {name}  ({ex['image']})")
+    print(f"\n> {name}  ({ex['image']})")
     t0 = time.time()
     proc = subprocess.run(cmd, capture_output=True, text=True)
     for line in (proc.stdout + proc.stderr).splitlines():

@@ -1,10 +1,10 @@
 """
-btc_kfp_pipeline.py — Kubeflow Pipelines (KFP v2) version of the BTC pipeline (Part C2).
+btc_kfp_pipeline.py - Kubeflow Pipelines (KFP v2) version of the BTC pipeline (Part C2).
 
 Four discrete *container components*, each running in the `btc-pipeline` image
 (kubeflow/Dockerfile = python:3.12-slim + src/ + ML libraries):
 
-    ingest_data ──► generate_features ──► train_model ──► evaluate_and_register
+    ingest_data -> generate_features -> train_model -> evaluate_and_register
       raw.json         clean.json          model.pkl         promoted model +
                                             metrics.json      registration record
 
@@ -13,7 +13,7 @@ so every run is reproducible and its outputs are tracked in the KFP UI.
 
 Compile to a YAML spec (no cluster needed):
     python kubeflow/btc_kfp_pipeline.py
-    → kubeflow/btc_kfp_pipeline.yaml
+    -> kubeflow/btc_kfp_pipeline.yaml
 
 Upload + schedule daily on a Kubeflow cluster (optional):
     KFP_HOST=http://localhost:8080 python kubeflow/btc_kfp_pipeline.py --schedule
@@ -35,7 +35,7 @@ PIPELINE_YAML = HERE / "btc_kfp_pipeline.yaml"
 
 @dsl.container_component
 def ingest_data(ticker: str, start_date: str, raw_data: dsl.Output[dsl.Dataset]):
-    """Download daily BTC-USD OHLCV data with yfinance → raw.json."""
+    """Download daily BTC-USD OHLCV data with yfinance -> raw.json."""
     return dsl.ContainerSpec(
         image=IMAGE,
         command=["sh", "-c"],
@@ -54,7 +54,7 @@ def ingest_data(ticker: str, start_date: str, raw_data: dsl.Output[dsl.Dataset])
 def generate_features(
     raw_data: dsl.Input[dsl.Dataset], clean_data: dsl.Output[dsl.Dataset]
 ):
-    """Clean data + technical indicators (MA7/MA30, volatility, lags) → clean.json."""
+    """Clean data + technical indicators (MA7/MA30, volatility, lags) -> clean.json."""
     return dsl.ContainerSpec(
         image=IMAGE,
         command=["sh", "-c"],
@@ -99,7 +99,7 @@ def evaluate_and_register(
     mape_threshold: float,
     registered_model: dsl.Output[dsl.Model],
 ):
-    """Promote the model only if MAPE ≤ threshold (fails the run otherwise)."""
+    """Promote the model only if MAPE <= threshold (fails the run otherwise)."""
     return dsl.ContainerSpec(
         image=IMAGE,
         command=["sh", "-c"],
@@ -123,7 +123,7 @@ def evaluate_and_register(
 
 @dsl.pipeline(
     name="btc-7day-forecast",
-    description="Daily BTC-USD ingest → features → XGBoost 7-day forecast → gate",
+    description="Daily BTC-USD ingest -> features -> XGBoost 7-day forecast -> gate",
 )
 def btc_forecast_pipeline(
     ticker: str = "BTC-USD",
@@ -149,7 +149,7 @@ def btc_forecast_pipeline(
 
 def compile_pipeline() -> Path:
     compiler.Compiler().compile(btc_forecast_pipeline, str(PIPELINE_YAML))
-    print(f"Compiled pipeline → {PIPELINE_YAML}")
+    print(f"Compiled pipeline -> {PIPELINE_YAML}")
     return PIPELINE_YAML
 
 

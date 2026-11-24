@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
-# setup.sh — One-time environment setup for the BTC MLOps Assignment (macOS)
+# setup.sh - One-time environment setup for the BTC MLOps Assignment (macOS)
 #
-# Installs: Homebrew, Git, Python 3.10, Docker Desktop, Minikube, kubectl,
+# Installs: Homebrew, Git, Python 3.11, Docker Desktop, Minikube, kubectl,
 #           and a Python virtual environment with the libraries in requirements.txt.
 # Then starts Minikube and enables the ingress + metrics-server addons.
 #
@@ -10,20 +10,20 @@
 #   chmod +x setup.sh
 #   ./setup.sh
 #
-# Safe to run more than once — already-installed tools are skipped.
+# Safe to run more than once - already-installed tools are skipped.
 # Note: Airflow is NOT pip-installed here; it runs in Docker via docker-compose.
 # =============================================================================
 
 set -euo pipefail
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
-info()  { echo -e "${GREEN}[✔]${NC} $1"; }
+info()  { echo -e "${GREEN}[ok]${NC} $1"; }
 step()  { echo -e "\n${YELLOW}==> $1${NC}"; }
-fail()  { echo -e "${RED}[✘]${NC} $1"; exit 1; }
+fail()  { echo -e "${RED}[error]${NC} $1"; exit 1; }
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 VENV_DIR="$PROJECT_DIR/.venv"
-PYTHON_VERSION="3.10"
+PYTHON_VERSION="3.11"
 
 # ----------------------------------------------------------------------------
 # 0. Check OS

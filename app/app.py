@@ -1,19 +1,19 @@
 """
-app.py — Flask REST API that serves the 7-day BTC price forecast.
+app.py - Flask REST API that serves the 7-day BTC price forecast.
 
 Endpoints
 ---------
-GET  /health    → is the app alive? uptime + loaded model version
-POST /predict   → next N days (1–7) of predicted closing prices
+GET  /health    -> is the app alive? uptime + loaded model version
+POST /predict   -> next N days (1-7) of predicted closing prices
                   body (optional): {"forecast_days": 7}
                   or custom history:
                   {"history": [{"date", "open", "high", "low", "close", "volume"}, ...]}
-GET  /metrics   → MAE / RMSE / MAPE from the latest validation run
-POST /reload    → re-read model.pkl from disk (called by Airflow after retraining)
+GET  /metrics   -> MAE / RMSE / MAPE from the latest validation run
+POST /reload    -> re-read model.pkl from disk (called by Airflow after retraining)
 
 The model file lives in MODEL_DIR (/app/models in Docker/Kubernetes).
 The app also checks the file's timestamp on each request, so EVERY worker
-and EVERY pod picks up a new model automatically — /reload just forces it now.
+and EVERY pod picks up a new model automatically - /reload just forces it now.
 
 Run (production):  gunicorn --bind 0.0.0.0:5000 app:app
 """
@@ -112,7 +112,7 @@ store.load()
 # Helpers
 # ---------------------------------------------------------------------------
 class BadRequest(Exception):
-    """Raised for invalid user input → HTTP 400."""
+    """Raised for invalid user input -> HTTP 400."""
 
 
 def require_model():
@@ -286,7 +286,7 @@ def reload_model():
 
 
 # ---------------------------------------------------------------------------
-# Error handlers → always JSON
+# Error handlers -> always JSON
 # ---------------------------------------------------------------------------
 @app.errorhandler(BadRequest)
 def handle_bad_request(e):
@@ -306,5 +306,5 @@ def handle_unexpected(e):
     )
 
 
-if __name__ == "__main__":  # dev server only — use gunicorn in production
+if __name__ == "__main__":  # dev server only - use gunicorn in production
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")))

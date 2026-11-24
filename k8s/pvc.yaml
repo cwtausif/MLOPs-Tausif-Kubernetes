@@ -1,4 +1,4 @@
-# D2 — A disk that survives pod restarts.
+# D2 - A disk that survives pod restarts.
 # Holds model.pkl, metrics.json, predictions.json.
 # Mounted at /app/models in every Flask pod (see deployment.yaml).
 # Minikube's default "standard" storage class creates it automatically.

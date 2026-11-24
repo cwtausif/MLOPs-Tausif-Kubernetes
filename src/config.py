@@ -1,8 +1,8 @@
 """
-config.py — all paths and settings in one place.
+config.py - all paths and settings in one place.
 
 Paths come from environment variables so the same code works:
-  - on your Mac         (defaults → ./data and ./models)
+  - on your Mac         (defaults -> ./data and ./models)
   - in Airflow          (DATA_DIR=/opt/airflow/data, MODEL_DIR=/opt/airflow/models)
   - in Kubernetes       (MODEL_DIR=/app/models)
 """
@@ -33,7 +33,7 @@ LIVE_PREDICTIONS = MODEL_DIR / "predictions.json"
 TICKER = os.getenv("TICKER", "BTC-USD")
 START_DATE = os.getenv("START_DATE", "2017-01-01")
 FORECAST_DAYS = 7  # predict next 7 days
-MAPE_THRESHOLD = float(os.getenv("MAPE_THRESHOLD", "10"))  # % — max error allowed
+MAPE_THRESHOLD = float(os.getenv("MAPE_THRESHOLD", "10"))  # % - max error allowed
 
 # Flask endpoint that reloads the model (used by notify.py)
 FLASK_RELOAD_URL = os.getenv("FLASK_RELOAD_URL", "http://localhost:5000/reload")
