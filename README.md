@@ -22,7 +22,7 @@ GitHub push ─► Actions (flake8, black, pytest, KFP compile) ─► GHCR / Do
 | `.github/workflows/ci_cd.yml` | Lint, test, build, push (SHA + `latest`) |
 | `k8s/` | ConfigMap/Secret, PVC, Deployment, Services, HPA, Ingress |
 | `loadtest/` | Locust file + in-cluster Locust Job for the HPA demo |
-| `docs/` | Technical report (PDF), CLI evidence and screenshots |
+| `docs/` | Report (`report.pdf`) and screenshots |
 
 ## Run it
 
